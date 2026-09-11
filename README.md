@@ -6,6 +6,7 @@ and update **only their own** tickets.
 - **Language:** Go 1.25 + [Gin](https://github.com/gin-gonic/gin)
 - **Storage:** SQLite (`modernc.org/sqlite`, pure Go — no cgo)
 - **Auth:** JWT (`Authorization: Bearer <token>`), passwords hashed with bcrypt
+- **Frontend:** plain HTML/CSS/JS served at `/` by the same binary
 - **Port:** 8080
 
 **Deployed URL:** https://ticket-system-phyz.onrender.com
@@ -133,6 +134,34 @@ A ticket belonging to someone else returns `404`, exactly as a non-existent one 
 
 ---
 
+## Frontend
+
+A small demo UI is served at `/` by the same Go binary — open http://localhost:8080 after
+starting the service. It supports register, login, logout, ticket creation, listing your own
+tickets, viewing one, and moving its status forward.
+
+```
+static/index.html   # structure and semantic markup
+static/style.css    # presentation
+static/app.js       # behaviour: auth state, API calls, rendering, events
+```
+
+No framework, no build step and no npm: three files of plain HTML, CSS and vanilla JavaScript.
+They are compiled into the binary with `embed` (see `static.go`), so the deployed service stays
+a single self-contained artifact with no runtime file dependency.
+
+Inside `app.js`, `apiRequest()` is the only place `fetch` is configured — it attaches the
+`Authorization: Bearer <token>` header and turns an error response into a thrown `Error`.
+Functions that fetch never touch the DOM, and functions that render never fetch.
+
+The UI calls the existing API only; it adds no endpoints and changes no request or response
+field. Serving it needed three extra routes (`/`, `/style.css`, `/app.js`) and nothing else.
+
+**The JWT is kept in `localStorage`**, which is a deliberate simplification for a demo UI: it
+is readable by any script on the page, so a production app would prefer an httpOnly cookie.
+
+---
+
 ## Status flow
 
 ```
@@ -163,12 +192,14 @@ Every error response has the shape `{"error":"..."}`.
 
 ```
 main.go         # server struct, router, routes, start-up
+static.go       # embeds and serves the frontend
 env.go          # .env file loader
 db.go           # SQLite connection + schema
 models.go       # User / Ticket structs and request bodies
 auth.go         # register + login handlers, bcrypt, JWT signing
 middleware.go   # Bearer-token auth middleware
 tickets.go      # ticket handlers, ownership checks, status flow
+static/         # frontend: index.html, style.css, app.js
 api_test.go     # handler tests over the real router
 tickets_test.go # status-transition tests
 Dockerfile      # multi-stage build, static binary

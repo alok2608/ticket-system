@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Ticket System</title>
+	<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+	<header class="header">
+		<h1>Ticket System</h1>
+		<div class="user-bar" id="user-bar" hidden>
+			<span id="user-email"></span>
+			<button type="button" id="logout-button" class="button button-secondary">Log out</button>
+		</div>
+	</header>
+
+	<main class="main">
+		<p class="message" id="message" role="status" hidden></p>
+
+		<!-- Shown while logged out -->
+		<section class="auth" id="auth-view">
+			<div class="card">
+				<h2>Log in</h2>
+				<form id="login-form">
+					<label for="login-email">Email</label>
+					<input type="email" id="login-email" name="email" autocomplete="username" required>
+
+					<label for="login-password">Password</label>
+					<input type="password" id="login-password" name="password" autocomplete="current-password" required>
+
+					<button type="submit" class="button">Log in</button>
+				</form>
+			</div>
+
+			<div class="card">
+				<h2>Register</h2>
+				<form id="register-form">
+					<label for="register-email">Email</label>
+					<input type="email" id="register-email" name="email" autocomplete="username" required>
+
+					<label for="register-password">Password</label>
+					<input type="password" id="register-password" name="password" autocomplete="new-password" required>
+
+					<button type="submit" class="button">Create account</button>
+				</form>
+			</div>
+		</section>
+
+		<!-- Shown while logged in -->
+		<section class="dashboard" id="dashboard-view" hidden>
+			<div class="card">
+				<h2>New ticket</h2>
+				<form id="ticket-form">
+					<label for="ticket-title">Title</label>
+					<input type="text" id="ticket-title" name="title" maxlength="120" required>
+
+					<label for="ticket-description">Description</label>
+					<textarea id="ticket-description" name="description" rows="3"></textarea>
+
+					<button type="submit" class="button">Create ticket</button>
+				</form>
+			</div>
+
+			<div class="card">
+				<div class="card-heading">
+					<h2>My tickets</h2>
+					<button type="button" id="refresh-button" class="button button-secondary">Refresh</button>
+				</div>
+
+				<p class="empty" id="tickets-empty" hidden>No tickets yet. Create one above.</p>
+				<ul class="ticket-list" id="ticket-list"></ul>
+			</div>
+
+			<div class="card" id="detail-card" hidden>
+				<div class="card-heading">
+					<h2>Ticket details</h2>
+					<button type="button" id="detail-close" class="button button-secondary">Close</button>
+				</div>
+				<dl class="detail" id="detail-body"></dl>
+			</div>
+		</section>
+	</main>
+
+	<script src="/app.js" defer></script>
+</body>
+</html>

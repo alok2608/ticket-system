@@ -54,6 +54,11 @@ func timestamp() string {
 func (s *server) routes() *gin.Engine {
 	r := gin.Default()
 
+	// Frontend. The API routes below are unchanged.
+	r.GET("/", serveIndex)
+	r.GET("/style.css", serveAsset("style.css", "text/css; charset=utf-8"))
+	r.GET("/app.js", serveAsset("app.js", "text/javascript; charset=utf-8"))
+
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})

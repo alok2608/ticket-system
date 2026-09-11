@@ -1,0 +1,285 @@
+:root {
+	--bg: #f4f5f7;
+	--surface: #ffffff;
+	--border: #dfe1e6;
+	--text: #1b1f23;
+	--muted: #5e6c84;
+	--accent: #2f6fdb;
+	--accent-dark: #255bb5;
+	--danger: #c62828;
+	--success: #1e7d3a;
+	--radius: 8px;
+	--gap: 16px;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--text);
+	font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* ---- header ---- */
+
+.header {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--gap);
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px 24px;
+	background: var(--surface);
+	border-bottom: 1px solid var(--border);
+}
+
+.header h1 {
+	margin: 0;
+	font-size: 20px;
+}
+
+.user-bar {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	color: var(--muted);
+	font-size: 14px;
+}
+
+/* ---- layout ---- */
+
+.main {
+	max-width: 760px;
+	margin: 0 auto;
+	padding: 24px 16px 48px;
+}
+
+.auth {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: var(--gap);
+}
+
+.dashboard {
+	display: grid;
+	gap: var(--gap);
+}
+
+.card {
+	padding: 20px;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+}
+
+.card h2 {
+	margin: 0 0 16px;
+	font-size: 16px;
+}
+
+.card-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--gap);
+	margin-bottom: 16px;
+}
+
+.card-heading h2 {
+	margin: 0;
+}
+
+/* ---- forms ---- */
+
+label {
+	display: block;
+	margin-bottom: 4px;
+	color: var(--muted);
+	font-size: 13px;
+}
+
+input,
+textarea,
+select {
+	width: 100%;
+	margin-bottom: 14px;
+	padding: 9px 10px;
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	background: var(--surface);
+	color: var(--text);
+	font: inherit;
+}
+
+textarea {
+	resize: vertical;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+	border-color: var(--accent);
+}
+
+.button {
+	padding: 9px 16px;
+	border: 1px solid var(--accent);
+	border-radius: 6px;
+	background: var(--accent);
+	color: #fff;
+	font: inherit;
+	cursor: pointer;
+}
+
+.button:hover {
+	background: var(--accent-dark);
+	border-color: var(--accent-dark);
+}
+
+.button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.button-secondary {
+	background: var(--surface);
+	border-color: var(--border);
+	color: var(--text);
+}
+
+.button-secondary:hover {
+	background: var(--bg);
+	border-color: var(--muted);
+}
+
+.button-small {
+	padding: 5px 10px;
+	font-size: 13px;
+}
+
+/* ---- messages ---- */
+
+.message {
+	margin: 0 0 var(--gap);
+	padding: 10px 14px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--surface);
+}
+
+.message-error {
+	border-color: var(--danger);
+	color: var(--danger);
+}
+
+.message-success {
+	border-color: var(--success);
+	color: var(--success);
+}
+
+/* ---- tickets ---- */
+
+.ticket-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	display: grid;
+	gap: 10px;
+}
+
+.ticket {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	padding: 12px 14px;
+	border: 1px solid var(--border);
+	border-radius: 6px;
+}
+
+.ticket-title {
+	flex: 1 1 180px;
+	font-weight: 600;
+	word-break: break-word;
+}
+
+.ticket-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+}
+
+.ticket-actions select {
+	width: auto;
+	margin-bottom: 0;
+}
+
+.empty {
+	margin: 0;
+	color: var(--muted);
+}
+
+.badge {
+	padding: 3px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.badge-open {
+	background: #e3f0ff;
+	color: #14539a;
+}
+
+.badge-in_progress {
+	background: #fff3d6;
+	color: #8a5a00;
+}
+
+.badge-closed {
+	background: #e6e8eb;
+	color: #44515f;
+}
+
+/* ---- detail ---- */
+
+.detail {
+	display: grid;
+	grid-template-columns: 120px 1fr;
+	gap: 8px 16px;
+	margin: 0;
+}
+
+.detail dt {
+	color: var(--muted);
+	font-size: 13px;
+}
+
+.detail dd {
+	margin: 0;
+	word-break: break-word;
+}
+
+/* ---- small screens ---- */
+
+@media (max-width: 520px) {
+	.main {
+		padding: 16px 12px 32px;
+	}
+
+	.detail {
+		grid-template-columns: 1fr;
+		gap: 2px 0;
+	}
+
+	.detail dd {
+		margin-bottom: 8px;
+	}
+}
