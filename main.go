@@ -10,37 +10,24 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var (
+// server holds the dependencies the handlers need. Passing it explicitly keeps
+// package-level mutable state out of the program and lets tests build a server
+// against a temporary database.
+type server struct {
 	db        *sql.DB
 	jwtSecret []byte
-)
+}
 
 func main() {
 	// Values already set in the real environment take priority over the file.
 	loadEnvFile(env("ENV_FILE", ".env"))
 
-	jwtSecret = resolveJWTSecret()
-
-	db = openDB(env("DB_PATH", "tickets.db"))
+	db := openDB(env("DB_PATH", "tickets.db"))
 	defer db.Close()
 
-	r := gin.Default()
+	srv := &server{db: db, jwtSecret: resolveJWTSecret()}
 
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
-
-	r.POST("/auth/register", register)
-	r.POST("/auth/login", login)
-
-	// Every /tickets route requires a valid JWT.
-	tickets := r.Group("/tickets", authRequired())
-	{
-		tickets.POST("", createTicket)
-		tickets.GET("", listTickets)
-		tickets.GET("/:id", getTicket)
-		tickets.PATCH("/:id/status", updateTicketStatus)
-	}
+	r := srv.routes()
 
 	addr := ":" + env("PORT", "8080")
 	log.Printf("ticket-system listening on %s", addr)
@@ -60,4 +47,28 @@ func env(key, fallback string) string {
 // created_at / updated_at everywhere.
 func timestamp() string {
 	return time.Now().UTC().Format(time.RFC3339)
+}
+
+// routes builds the router. Kept separate from main so tests can exercise the
+// real routing table without starting a server.
+func (s *server) routes() *gin.Engine {
+	r := gin.Default()
+
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+
+	r.POST("/auth/register", s.register)
+	r.POST("/auth/login", s.login)
+
+	// Every /tickets route requires a valid JWT.
+	tickets := r.Group("/tickets", s.authRequired())
+	{
+		tickets.POST("", s.createTicket)
+		tickets.GET("", s.listTickets)
+		tickets.GET("/:id", s.getTicket)
+		tickets.PATCH("/:id/status", s.updateTicketStatus)
+	}
+
+	return r
 }

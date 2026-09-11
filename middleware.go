@@ -14,7 +14,7 @@ const contextUserID = "user_id"
 
 // authRequired rejects any request without a valid "Authorization: Bearer <token>"
 // header and stores the caller's user id in the request context.
-func authRequired() gin.HandlerFunc {
+func (s *server) authRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		parts := strings.Fields(c.GetHeader("Authorization"))
 		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
@@ -26,7 +26,7 @@ func authRequired() gin.HandlerFunc {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, errors.New("unexpected signing method")
 			}
-			return jwtSecret, nil
+			return s.jwtSecret, nil
 		})
 		if err != nil || !token.Valid {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})

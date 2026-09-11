@@ -38,7 +38,7 @@ func canTransition(from, to string) bool {
 }
 
 // POST /tickets
-func createTicket(c *gin.Context) {
+func (s *server) createTicket(c *gin.Context) {
 	var body createTicketRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
@@ -52,7 +52,7 @@ func createTicket(c *gin.Context) {
 
 	userID := currentUserID(c)
 	now := timestamp()
-	res, err := db.Exec(
+	res, err := s.db.Exec(
 		`INSERT INTO tickets (user_id, title, description, status, created_at, updated_at)
 		 VALUES (?, ?, ?, ?, ?, ?)`,
 		userID, body.Title, body.Description, StatusOpen, now, now,
@@ -61,7 +61,11 @@ func createTicket(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create ticket"})
 		return
 	}
-	id, _ := res.LastInsertId()
+	id, err := res.LastInsertId()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create ticket"})
+		return
+	}
 
 	c.JSON(http.StatusCreated, Ticket{
 		ID:          id,
@@ -75,8 +79,8 @@ func createTicket(c *gin.Context) {
 }
 
 // GET /tickets - only the logged-in user's tickets.
-func listTickets(c *gin.Context) {
-	rows, err := db.Query(
+func (s *server) listTickets(c *gin.Context) {
+	rows, err := s.db.Query(
 		`SELECT id, user_id, title, description, status, created_at, updated_at
 		 FROM tickets WHERE user_id = ? ORDER BY id`,
 		currentUserID(c),
@@ -101,13 +105,13 @@ func listTickets(c *gin.Context) {
 }
 
 // GET /tickets/:id - a ticket owned by the logged-in user.
-func getTicket(c *gin.Context) {
+func (s *server) getTicket(c *gin.Context) {
 	id, ok := ticketIDParam(c)
 	if !ok {
 		return
 	}
 
-	ticket, err := findOwnedTicket(id, currentUserID(c))
+	ticket, err := s.findOwnedTicket(id, currentUserID(c))
 	if err == sql.ErrNoRows {
 		c.JSON(http.StatusNotFound, gin.H{"error": "ticket not found"})
 		return
@@ -121,7 +125,7 @@ func getTicket(c *gin.Context) {
 }
 
 // PATCH /tickets/:id/status
-func updateTicketStatus(c *gin.Context) {
+func (s *server) updateTicketStatus(c *gin.Context) {
 	id, ok := ticketIDParam(c)
 	if !ok {
 		return
@@ -138,7 +142,7 @@ func updateTicketStatus(c *gin.Context) {
 		return
 	}
 
-	ticket, err := findOwnedTicket(id, currentUserID(c))
+	ticket, err := s.findOwnedTicket(id, currentUserID(c))
 	if err == sql.ErrNoRows {
 		c.JSON(http.StatusNotFound, gin.H{"error": "ticket not found"})
 		return
@@ -148,17 +152,17 @@ func updateTicketStatus(c *gin.Context) {
 		return
 	}
 
-	if ticket.Status == StatusClosed {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "a closed ticket cannot be reopened"})
-		return
-	}
 	if !canTransition(ticket.Status, next) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid status transition from " + ticket.Status + " to " + next})
+		message := "invalid status transition from " + ticket.Status + " to " + next
+		if ticket.Status == StatusClosed {
+			message = "a closed ticket cannot be reopened"
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": message})
 		return
 	}
 
 	now := timestamp()
-	if _, err := db.Exec(
+	if _, err := s.db.Exec(
 		`UPDATE tickets SET status = ?, updated_at = ? WHERE id = ? AND user_id = ?`,
 		next, now, ticket.ID, ticket.UserID,
 	); err != nil {
@@ -173,9 +177,9 @@ func updateTicketStatus(c *gin.Context) {
 
 // findOwnedTicket returns the ticket only if it belongs to the given user,
 // so another user's ticket is indistinguishable from one that does not exist.
-func findOwnedTicket(id, userID int64) (Ticket, error) {
+func (s *server) findOwnedTicket(id, userID int64) (Ticket, error) {
 	var t Ticket
-	err := db.QueryRow(
+	err := s.db.QueryRow(
 		`SELECT id, user_id, title, description, status, created_at, updated_at
 		 FROM tickets WHERE id = ? AND user_id = ?`,
 		id, userID,

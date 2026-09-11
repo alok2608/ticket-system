@@ -36,18 +36,18 @@ func resolveJWTSecret() []byte {
 }
 
 // issueToken signs a JWT that carries the user id as the subject.
-func issueToken(userID int64) (string, error) {
+func (s *server) issueToken(userID int64) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":     strconv.FormatInt(userID, 10),
 		"user_id": userID,
 		"exp":     time.Now().Add(tokenTTL).Unix(),
 		"iat":     time.Now().Unix(),
 	}
-	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(jwtSecret)
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(s.jwtSecret)
 }
 
 // POST /auth/register
-func register(c *gin.Context) {
+func (s *server) register(c *gin.Context) {
 	var body credentials
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
@@ -61,7 +61,7 @@ func register(c *gin.Context) {
 	}
 
 	var exists int
-	if err := db.QueryRow(`SELECT COUNT(*) FROM users WHERE email = ?`, email).Scan(&exists); err != nil {
+	if err := s.db.QueryRow(`SELECT COUNT(*) FROM users WHERE email = ?`, email).Scan(&exists); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not register user"})
 		return
 	}
@@ -77,7 +77,7 @@ func register(c *gin.Context) {
 	}
 
 	now := timestamp()
-	res, err := db.Exec(
+	res, err := s.db.Exec(
 		`INSERT INTO users (email, password_hash, created_at) VALUES (?, ?, ?)`,
 		email, string(hash), now,
 	)
@@ -85,9 +85,13 @@ func register(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not register user"})
 		return
 	}
-	id, _ := res.LastInsertId()
+	id, err := res.LastInsertId()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not register user"})
+		return
+	}
 
-	token, err := issueToken(id)
+	token, err := s.issueToken(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create token"})
 		return
@@ -105,7 +109,7 @@ func register(c *gin.Context) {
 }
 
 // POST /auth/login
-func login(c *gin.Context) {
+func (s *server) login(c *gin.Context) {
 	var body credentials
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
@@ -119,7 +123,7 @@ func login(c *gin.Context) {
 	}
 
 	var user User
-	err := db.QueryRow(
+	err := s.db.QueryRow(
 		`SELECT id, email, password_hash FROM users WHERE email = ?`, email,
 	).Scan(&user.ID, &user.Email, &user.PasswordHash)
 	if err == sql.ErrNoRows {
@@ -136,7 +140,7 @@ func login(c *gin.Context) {
 		return
 	}
 
-	token, err := issueToken(user.ID)
+	token, err := s.issueToken(user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create token"})
 		return

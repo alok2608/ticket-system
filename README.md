@@ -162,18 +162,41 @@ Every error response has the shape `{"error":"..."}`.
 ## Project structure
 
 ```
-main.go         # router, routes, server start-up
+main.go         # server struct, router, routes, start-up
 env.go          # .env file loader
 db.go           # SQLite connection + schema
 models.go       # User / Ticket structs and request bodies
 auth.go         # register + login handlers, bcrypt, JWT signing
 middleware.go   # Bearer-token auth middleware
 tickets.go      # ticket handlers, ownership checks, status flow
+api_test.go     # handler tests over the real router
+tickets_test.go # status-transition tests
 Dockerfile      # multi-stage build, static binary
 ```
 
 One `main` package, one file per concern — no repository or service layers, since the brief
 asks for a simple implementation.
+
+Handlers are methods on a small `server` struct holding the database handle and the JWT
+secret. Passing dependencies explicitly keeps package-level mutable state out of the program
+and lets the tests build a server against a temporary database.
+
+Two pieces carry the rules the brief cares about:
+
+- `findOwnedTicket(id, userID)` is the only way a handler can load a ticket, and it filters on
+  `user_id` in the SQL itself — so an ownership check cannot be forgotten at a call site.
+- `canTransition(from, to)` is a pure function holding the status rules, independent of Gin
+  and the database.
+
+## Tests
+
+```bash
+go test ./...
+```
+
+Covers the health response, registration and login, bcrypt storage, bearer-token enforcement
+on every protected route, ownership isolation between two users, the status flow, and input
+validation. The handler tests run against the real router and a throwaway SQLite file.
 
 ---
 
