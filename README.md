@@ -8,8 +8,16 @@ and update **only their own** tickets.
 - **Auth:** JWT (`Authorization: Bearer <token>`), passwords hashed with bcrypt
 - **Port:** 8080
 
-**Deployed URL:** `<PASTE DEPLOYED URL HERE>`
-**Health check:** `<PASTE DEPLOYED URL HERE>/health`
+**Deployed URL:** https://ticket-system-phyz.onrender.com
+**Health check:** https://ticket-system-phyz.onrender.com/health
+
+```bash
+curl https://ticket-system-phyz.onrender.com/health
+# {"status":"ok"}
+```
+
+> Hosted on Render's free tier, which spins down after inactivity — the first request
+> after an idle period can take up to a minute to wake.
 
 ---
 
