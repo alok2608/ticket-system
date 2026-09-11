@@ -1,0 +1,6 @@
+.git
+.gitignore
+.env
+*.db
+README.md
+ticket-system

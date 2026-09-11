@@ -1,0 +1,13 @@
+# Environment
+.env
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
+
+# Compiled binary
+ticket-system
+
+# macOS
+.DS_Store
